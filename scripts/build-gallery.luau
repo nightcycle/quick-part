@@ -5,6 +5,7 @@ local roblox = require("@lune/roblox")
 local Layout = require("./load-package")()("demo/Layout")
 local r = roblox :: any
 local V, CF, Color = r.Vector3, r.CFrame, r.Color3
+local assets = roblox.deserializeModel(fs.readFile("demo/assets/LibrarySamples.rbxm"))[1] :: any
 
 local gallery = roblox.Instance.new("Folder") :: any
 gallery.Name = "ComparisonGallery"
@@ -80,6 +81,19 @@ for _, example in Layout.Examples do
 		)
 		local model = roblox.Instance.new("Model") :: any
 		model.Name, model.Parent = if right then "Preview" else "Reference", row
+		for index, placement in example.Assets or {} do
+			local asset = assert(assets:FindFirstChild(placement.Name)):Clone()
+			asset.Name = `{placement.Name}{index}`
+			for _, object in asset:GetDescendants() do
+				if object:IsA("BasePart") then
+					local cf = object.CFrame
+					object.Size *= placement.Scale
+					object.CFrame = origin * placement.CFrame * (cf.Rotation + cf.Position * placement.Scale)
+				end
+			end
+			asset.WorldPivotData, asset.NeedsPivotMigration = origin * placement.CFrame, false
+			asset.Parent = model
+		end
 		for _, spec in example.Parts do
 			local object = roblox.Instance.new(if spec.Shape == "Wedge" then "WedgePart" else "Part") :: any
 			object.Name, object.Size, object.CFrame = spec.Name, spec.Size, origin * spec.CFrame
@@ -114,4 +128,4 @@ camera.CFrame = CF.lookAt(V.new(92, 86, 116), V.new(0, 4, -12))
 camera.Focus = CF.new(0, 4, -12)
 camera.FieldOfView = 65
 fs.writeFile("demo/world/Camera.rbxm", roblox.serializeModel({ camera }))
-print("Baked spawn and three paired comparison rows into demo/world/Gallery.rbxm")
+print(`Baked spawn and {#Layout.Examples} paired comparison rows into demo/world/Gallery.rbxm`)

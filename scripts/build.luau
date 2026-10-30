@@ -25,7 +25,27 @@ local layout = require("./load-package")()("demo/Layout")
 for _, example in layout.Examples do
 	local row = gallery:FindFirstChild(example.Name)
 	assert(row and row.Reference:IsA("Model") and row.Preview:IsA("Model"))
-	assert(#row.Reference:GetChildren() == #example.Parts and #row.Preview:GetChildren() == #example.Parts)
+	local expectedChildren = if example.Assets then #example.Assets else #example.Parts
+	assert(#row.Reference:GetChildren() == expectedChildren and #row.Preview:GetChildren() == expectedChildren)
+	if example.Assets then
+		local originals, copies = row.Reference:GetDescendants(), row.Preview:GetDescendants()
+		assert(#originals == #copies)
+		for index, original in originals do
+			local copy = copies[index]
+			assert(original.ClassName == copy.ClassName and original.Name == copy.Name)
+			if original:IsA("BasePart") then
+				assert(
+					original.Size == copy.Size and original.Color == copy.Color and original.Material == copy.Material
+				)
+				assert(
+					(copy.CFrame.Position - original.CFrame.Position - Vector3.new(layout.RightX - layout.LeftX, 0, 0)).Magnitude
+						< 0.001
+				)
+				assert(tostring(original.MeshContent) == tostring(copy.MeshContent))
+				assert(tostring(original.TextureContent) == tostring(copy.TextureContent))
+			end
+		end
+	end
 	for _, spec in example.Parts do
 		local real, preview = row.Reference:FindFirstChild(spec.Name), row.Preview:FindFirstChild(spec.Name)
 		assert(real.Size == preview.Size and real.Color == preview.Color and real.Material == preview.Material)

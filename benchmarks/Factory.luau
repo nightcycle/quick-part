@@ -7,8 +7,19 @@ type Renderer = QuickPart.Renderer
 type ModelHandle = QuickPart.ModelHandle
 type Profiler = { Begin: (string) -> (), End: () -> () }
 
-return function(count: number, rigid: boolean)
+return function(count: number, rigid: boolean, template: Model?)
 	assert(count >= 1 and count % 1 == 0, "Benchmark count must be a positive integer")
+	local templateParts: { BasePart } = {}
+	local templatePivot = CFrame.identity
+	if template then
+		templatePivot = template:GetPivot()
+		for _, object in template:GetDescendants() do
+			if object:IsA("BasePart") then
+				table.insert(templateParts, object)
+			end
+		end
+		assert(#templateParts == count, "Benchmark count must match the template's BaseParts")
+	end
 	local renderer: Renderer? = nil
 	local folder: Folder? = nil
 	local handles: { PartHandle } = {}
@@ -19,7 +30,7 @@ return function(count: number, rigid: boolean)
 	local pivots = { CFrame.new(0, 10, 0), CFrame.new(1, 11, 0) * CFrame.Angles(0, 0.1, 0) }
 	-- Bound repeated work to roughly 1000 part updates per sample. Every case
 	-- uses the same repeat count, including the constant-cost rigid-model path.
-	local repeats = math.clamp(math.floor(1000 / count), 1, 8)
+	local repeats = if template then 1 else math.clamp(math.floor(1000 / count), 1, 8)
 	local function cleanup()
 		if renderer then
 			renderer.Destroy()
@@ -51,17 +62,22 @@ return function(count: number, rigid: boolean)
 			source.Parent = container
 			local options: { QuickPart.PartOptions } = {}
 			for index = 1, count do
-				local localFrame = CFrame.new((index % 32) * 3, math.floor(index / 32) * 3, 0)
+				local original = templateParts[index]
+				local localFrame = if original
+					then templatePivot:ToObjectSpace(original.CFrame)
+					else CFrame.new((index % 32) * 3, math.floor(index / 32) * 3, 0)
 				for phase = 1, 2 do
 					targets[phase][index] = pivots[phase] * localFrame
 				end
 				options[index] =
 					{ Size = Vector3.one, CFrame = targets[1][index], Color = Color3.fromRGB(70, 170, 240) }
 				for group = 1, 3 do
-					local part = Instance.new("Part")
+					local part: BasePart = if original then original:Clone() else Instance.new("Part")
 					part.Anchored = true
 					part.CanCollide, part.CanTouch, part.CanQuery = false, false, false
-					part.Size = Vector3.one
+					if not original then
+						part.Size = Vector3.one
+					end
 					part.CFrame = targets[1][index]
 					part.Parent = if group == 1 then source else container
 					table.insert(groups[group], part)
@@ -75,6 +91,12 @@ return function(count: number, rigid: boolean)
 				local value, failure = active.FromModel(source)
 				assert(value, failure)
 				modelHandle = value
+			elseif template then
+				for _, part in groups[1] do
+					local value, failure = active.FromPart(part)
+					assert(value, `Library mesh import failed before timing: {tostring(failure)}`)
+					table.insert(handles, value)
+				end
 			else
 				local value, failure = active.CreateMany(options)
 				assert(value, failure)

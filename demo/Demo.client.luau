@@ -24,7 +24,7 @@ type Row = {
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn = "QuickPartDemo", false
 local label = Instance.new("TextLabel")
-label.Size, label.Position = UDim2.new(1, -32, 0, 130), UDim2.fromOffset(16, 16)
+label.Size, label.Position = UDim2.new(1, -32, 0, 170), UDim2.fromOffset(16, 16)
 label.BackgroundColor3, label.BackgroundTransparency = Color3.fromRGB(17, 24, 35), 0.08
 label.TextColor3, label.TextSize = Color3.fromRGB(232, 240, 252), 16
 label.Font, label.TextWrapped = Enum.Font.Gotham, true
@@ -32,7 +32,7 @@ label.Text = "QuickPart comparison gallery · Loading paired examples..."
 label.Parent = gui
 local function button(text: string, x: number): TextButton
 	local control = Instance.new("TextButton")
-	control.Size, control.Position = UDim2.fromOffset(170, 36), UDim2.fromOffset(x, 154)
+	control.Size, control.Position = UDim2.fromOffset(170, 36), UDim2.fromOffset(x, 194)
 	control.BackgroundColor3, control.TextColor3 = Color3.fromRGB(44, 59, 81), Color3.new(1, 1, 1)
 	control.Font, control.TextSize, control.Text = Enum.Font.GothamBold, 14, text
 	control.Parent = gui
@@ -72,8 +72,14 @@ local function fail(row: Row, reason: string)
 	end
 	row.Renderer, row.Handles, row.ModelHandle = nil, nil, nil
 	setPreviewVisible(row, true)
-	status(row, "BasePart preview — mesh unavailable (see Output)", true)
-	label.Text ..= "\nEnable Mesh / Image APIs in Game Settings > Security."
+	local denied = string.find(string.lower(reason), "permission", 1, true) ~= nil
+	status(
+		row,
+		if denied
+			then "Asset access denied · animated original preview"
+			else "Mesh unavailable · animated original preview (see Output)",
+		true
+	)
 	warn(`QuickPart demo [{row.Example.Name}]: {reason}`)
 end
 table.insert(
@@ -97,6 +103,13 @@ for _, example in Layout.Examples do
 		assert(real:IsA("BasePart") and copy:IsA("BasePart"))
 		table.insert(realParts, real)
 		table.insert(previewParts, copy)
+	end
+	if example.Assets then
+		for _, object in preview:GetDescendants() do
+			if object:IsA("BasePart") then
+				table.insert(previewParts, object)
+			end
+		end
 	end
 	local row: Row = {
 		Example = example,

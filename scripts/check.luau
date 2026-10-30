@@ -11,6 +11,7 @@ local function run(command: string, arguments: { string })
 end
 run("lune", { "run", "tests/run" })
 run("lune", { "run", "tests/check-demo" })
+run("lune", { "run", "tests/check-library" })
 run("stylua", { "--check", "src", "demo", "benchmarks", "tests", "scripts" })
 run("rojo", { "sourcemap", "demo.project.json", "--output", "sourcemap.json" })
 local definitions = process.args[1] or ".tools/globalTypes.d.luau"
@@ -37,5 +38,6 @@ run("luau-lsp", {
 	"demo",
 	"benchmarks",
 	"tests/StudioChecks.luau",
+	"tests/FoliageChecks.luau",
 })
 print("Lune checks, formatting and strict Roblox type analysis passed.")

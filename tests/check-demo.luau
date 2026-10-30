@@ -8,6 +8,9 @@ local r = sandbox.Roblox
 local compared = 0
 
 for _, example in Layout.Examples do
+	if example.Assets then
+		continue -- Real library assets are validated by check-library and Studio FoliageChecks.
+	end
 	local renderer = QuickPart.new()
 	if example.Kind ~= "Model" then
 		local options = {}

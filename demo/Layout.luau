@@ -19,6 +19,7 @@ export type Example = {
 	Kind: "Properties" | "Population" | "Model",
 	Z: number,
 	Parts: { Spec },
+	Assets: { { Name: string, CFrame: CFrame, Scale: number } }?,
 }
 
 local Layout = {}
@@ -119,6 +120,37 @@ for index = -2, 2 do
 	table.insert(model.Parts, spec)
 end
 table.insert(Layout.Examples, model)
+
+table.insert(Layout.Examples, {
+	Name = "BirchTrees",
+	Title = "04  /  BIRCH TREES",
+	Z = -97,
+	Kind = "Model",
+	Description = "Original trunk + leaf cards / SurfaceAppearance / shared pivot and scale",
+	Parts = {},
+	Assets = {
+		{ Name = "Birch", CFrame = CFrame.new(-7, 0, 0), Scale = 1.5 },
+		{ Name = "Birch", CFrame = CFrame.new(7, 0, -2) * CFrame.Angles(0, 0.7, 0), Scale = 1.2 },
+	},
+})
+table.insert(Layout.Examples, {
+	Name = "Woodland",
+	Title = "05  /  WOODLAND",
+	Z = -139,
+	Kind = "Model",
+	Description = "Original round tree, pine, bushes, ferns, grass and rock / rigid grove",
+	Parts = {},
+	Assets = {
+		{ Name = "RoundTree", CFrame = CFrame.new(-8, 0, -5), Scale = 0.8 },
+		{ Name = "Pine", CFrame = CFrame.new(8, 0, -5), Scale = 1 },
+		{ Name = "Bush", CFrame = CFrame.new(2, 0, 6), Scale = 0.9 },
+		{ Name = "Fern", CFrame = CFrame.new(-9, 0, 6), Scale = 1.2 },
+		{ Name = "Fern", CFrame = CFrame.new(-4, 0, 9) * CFrame.Angles(0, 1, 0), Scale = 1 },
+		{ Name = "Grass", CFrame = CFrame.new(4, 0, 10), Scale = 2 },
+		{ Name = "Grass", CFrame = CFrame.new(7, 0, 8), Scale = 2.5 },
+		{ Name = "Boulder", CFrame = CFrame.new(10, 0, 5), Scale = 0.45 },
+	},
+})
 
 function Layout.origin(example: Example, right: boolean): CFrame
 	return CFrame.new(if right then Layout.RightX else Layout.LeftX, 1, example.Z)

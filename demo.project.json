@@ -4,15 +4,17 @@
     "$className": "DataModel",
     "Workspace": {
       "$className": "Workspace",
-      "Ground": { "$className": "Part", "$properties": { "Anchored": true, "Size": [150, 1, 190], "Position": [0, -0.5, -5], "Color": [0.07, 0.09, 0.13] } },
+      "Ground": { "$className": "Part", "$properties": { "Anchored": true, "Size": [150, 1, 290], "Position": [0, -0.5, -55], "Color": [0.07, 0.09, 0.13] } },
       "ComparisonGallery": { "$path": "demo/world/Gallery.rbxm" },
       "Camera": { "$path": "demo/world/Camera.rbxm" }
     },
     "ReplicatedStorage": {
       "Packages": { "$className": "Folder", "QuickPart": { "$path": "src" } },
       "DemoLayout": { "$path": "demo/Layout.luau" },
+      "DemoAssets": { "$path": "demo/assets/LibrarySamples.rbxm" },
       "Benchmarks": { "$path": "benchmarks" },
-      "Checks": { "$path": "tests/StudioChecks.luau" }
+      "Checks": { "$path": "tests/StudioChecks.luau" },
+      "FoliageChecks": { "$path": "tests/FoliageChecks.luau" }
     },
     "StarterPlayer": { "StarterPlayerScripts": { "QuickPartDemo": { "$path": "demo/Demo.client.luau" } } },
     "Lighting": { "$properties": { "ClockTime": 14, "Brightness": 2 } }

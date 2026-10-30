@@ -1,0 +1,40 @@
+{
+  "Samples": [
+    {
+      "Name": "Birch",
+      "Parts": 2,
+      "Source": "lib.vegetation.tree.full.Meshes/Birch_Tree_Birch_Small_01"
+    },
+    {
+      "Name": "RoundTree",
+      "Parts": 1,
+      "Source": "lib.vegetation.tree.full.Meshes/PolygonNature_Tree_Round_01"
+    },
+    {
+      "Name": "Pine",
+      "Parts": 1,
+      "Source": "lib.vegetation.tree.full.Meshes/PolygonNature_Tree_PolyPine_03"
+    },
+    {
+      "Name": "Fern",
+      "Parts": 1,
+      "Source": "lib.vegetation.bush.Meshes/PolygonNature_Plant_Fern_01"
+    },
+    {
+      "Name": "Bush",
+      "Parts": 1,
+      "Source": "lib.vegetation.bush.Meshes/PolygonNature_Plant_Hedge_Bush_01"
+    },
+    {
+      "Name": "Grass",
+      "Parts": 1,
+      "Source": "lib.vegetation.grass.Meshes/PolygonNature_Plant_Grass_02"
+    },
+    {
+      "Name": "Boulder",
+      "Parts": 1,
+      "Source": "lib.rock.boulder.Meshes/PolygonNature_Rock_Boulder_01"
+    }
+  ],
+  "Source": "C:/Users/nightcycle/repos/local-package/demo/lib.rbxm"
+}
