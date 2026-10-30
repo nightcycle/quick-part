@@ -131,6 +131,41 @@ Pixel-identical rendering for every Roblox BasePart is not promised: primitive t
 
 ## Benchmarks
 
+### Recorded results
+
+Studio results supplied on 2026-10-29 using **Benchmarker v7.3.0**. Each sample updates **1,000 parts once**; setup is excluded. All timings below are milliseconds, transcribed from the screenshots' percentile tables. Hardware and Studio build were not provided.
+
+**Independent1000 — individually moving parts**
+
+| Method | P10 (ms) | Median / P50 (ms) | P90 (ms) | QuickPart median speedup |
+| --- | ---: | ---: | ---: | ---: |
+| **QuickPart UpdateMany** | **0.618** | **0.770** | **1.016** | — |
+| BulkMoveTo FireCFrameChanged | 2.000 | 2.389 | 3.547 | 3.10× |
+| BulkMoveTo FireAllEvents | 5.005 | 5.361 | 6.469 | 6.96× |
+| BasePart CFrame | 5.297 | 5.707 | 6.745 | 7.41× |
+
+**RigidModel1000 — moving 1,000 parts as one model**
+
+| Method | P10 (ms) | Median / P50 (ms) | P90 (ms) | QuickPart median speedup |
+| --- | ---: | ---: | ---: | ---: |
+| **QuickPart UpdateModel** | **0.012** | **0.017** | **0.033** | — |
+| BulkMoveTo FireCFrameChanged | 1.993 | 2.500 | 3.973 | 147.06× |
+| BulkMoveTo FireAllEvents | 4.998 | 5.504 | 6.931 | 323.76× |
+| BasePart CFrame | 5.307 | 5.824 | 7.174 | 342.59× |
+
+Speedup is the baseline median divided by the QuickPart median, using the displayed rounded values. In these runs, QuickPart took **0.770 ms** for independent movement and **0.017 ms** for rigid model movement, versus **2.389 ms** and **2.500 ms** for the fastest baseline, BulkMoveTo FireCFrameChanged. These are CPU submission timings for these workloads, not whole-frame rendering times.
+
+<details>
+<summary>Original benchmark screenshots</summary>
+
+![Independent1000 benchmark results](docs/benchmarks/independent1000.png)
+
+![RigidModel1000 benchmark results](docs/benchmarks/rigid-model1000.png)
+
+</details>
+
+### Running the benchmarks
+
 The supplied `Benchmarker (1).rbxm` was deserialized with Lune and its Runner/Template inspected as reference data. Its plugin code is not redistributed. Select one of these modules under `ReplicatedStorage.Benchmarks` in the built place and run the installed Benchmarker plugin in edit mode:
 
 - `Independent100.bench`: 100 independently updated handles.
