@@ -3,6 +3,7 @@ local fs = require("@lune/fs")
 local process = require("@lune/process")
 local roblox = require("@lune/roblox")
 local luau = require("@lune/luau")
+local metadata = require("./package-metadata")()
 local Vector3 = (roblox :: any).Vector3
 fs.writeDir("build")
 local function run(command: string, arguments: { string })
@@ -13,7 +14,7 @@ end
 run("lune", { "run", "scripts/build-gallery" })
 run("rojo", { "build", "default.project.json", "--output", "build/quick-part.rbxm" })
 run("rojo", { "build", "demo.project.json", "--output", "build/quick-part-demo.rbxl" })
-run("wally", { "package", "--output", "build/quick-part-0.1.0.tar.gz" })
+run("wally", { "package", "--output", metadata.Archive })
 local root = roblox.deserializeModel(fs.readFile("build/quick-part.rbxm"))[1] :: any
 assert(root:IsA("ModuleScript") and root.Name == "QuickPart")
 local model = roblox.deserializePlace(fs.readFile("build/quick-part-demo.rbxl")) :: any

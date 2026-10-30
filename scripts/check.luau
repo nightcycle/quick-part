@@ -12,14 +12,17 @@ end
 run("lune", { "run", "tests/run" })
 run("lune", { "run", "tests/check-demo" })
 run("lune", { "run", "tests/check-library" })
+run("lune", { "run", "tests/check-release" })
 run("stylua", { "--check", "src", "demo", "benchmarks", "tests", "scripts" })
 run("rojo", { "sourcemap", "demo.project.json", "--output", "sourcemap.json" })
-local definitions = process.args[1] or ".tools/globalTypes.d.luau"
+local definitionsRevision = "f8cc4b9b797b48df5b895bbaf85b0faf9eac5e67"
+local definitions = process.args[1] or `.tools/globalTypes-{definitionsRevision}.d.luau`
 if not fs.isFile(definitions) then
 	assert(not process.args[1], `Missing definitions: {definitions}`)
 	fs.writeDir(".tools")
-	local response =
-		net.request("https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/master/scripts/globalTypes.d.luau")
+	local response = net.request(
+		`https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/{definitionsRevision}/scripts/globalTypes.d.luau`
+	)
 	assert(
 		response.ok,
 		"Could not download Roblox type definitions; pass a local definitions path as the first argument"

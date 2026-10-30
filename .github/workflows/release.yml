@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable version tag matching wally.toml (for example v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: CompeyDev/setup-rokit@1d9390883f7ebce19d48f5b8d006e11d387c92ab # v0.2.1
+        with:
+          version: v1.2.0
+      - name: Validate version and exact tag commit
+        run: lune run scripts/validate-release
+      - name: Lune tests, formatting and strict Luau analysis
+        run: lune run scripts/check
+      - name: Build and verify release artifacts
+        run: lune run scripts/build
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" build/quick-part.rbxm build/quick-part-demo.rbxl build/quick-part-*.zip --clobber
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --generate-notes --title "$RELEASE_TAG" \
+              build/quick-part.rbxm build/quick-part-demo.rbxl build/quick-part-*.zip
+          fi
+      - name: Publish Wally package when configured
+        env:
+          WALLY_AUTH_TOKEN: ${{ secrets.WALLY_AUTH_TOKEN }}
+        run: |
+          if [[ -n "$WALLY_AUTH_TOKEN" ]]; then
+            lune run scripts/publish-wally
+          else
+            echo '::notice::Wally publication skipped: configure the WALLY_AUTH_TOKEN repository secret.'
+            echo 'GitHub release published. Wally publication skipped: WALLY_AUTH_TOKEN is not configured.' >> "$GITHUB_STEP_SUMMARY"
+          fi

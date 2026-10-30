@@ -13,17 +13,34 @@ lune run scripts/build
 rojo serve demo.project.json
 ```
 
-`check` runs the Lune sandbox, StyLua and Roblox strict type analysis. It caches upstream luau-lsp Roblox definitions in `.tools/`; for offline checking, pass an existing definitions file: `lune run scripts/check path/to/globalTypes.d.luau`. `build` deserializes the artifacts to verify their structure and compiles every embedded script:
+`check` runs the Lune sandbox, release validation tests, StyLua and Roblox strict type analysis. It caches pinned upstream luau-lsp Roblox definitions in `.tools/`; for offline checking, pass an existing definitions file: `lune run scripts/check path/to/globalTypes.d.luau`. `build` deserializes the artifacts to verify their structure and compiles every embedded script:
 
 - `build/quick-part-demo.rbxl`: includes a spawn point and five labeled, side-by-side comparison rows, visible before Play. Press **Play (F5)** to animate the real BaseParts/models on the left and their QuickPart versions on the right: five primitives changing properties, 100 moving cubes, a rotating/scaling 26-part arch, two birch trees with separate trunks and transparent leaf cards, and a woodland scene with a round tree, pine, bush, ferns, grass and boulder. Walk around with the avatar and normal Roblox camera; **Pause animation** lets you inspect matching poses. The right side is explicitly labeled as a BasePart preview until mesh creation succeeds; if EditableMesh is unavailable, the reference animations continue and the UI reports the failure. Use Play, not the server-only Run mode, for the client animation.
 - `build/quick-part.rbxm`: standalone ModuleScript package.
-- `build/quick-part-0.1.0.tar.gz`: Wally archive, containing only package sources, README, license and manifests.
+- `build/quick-part-<version>.zip`: Wally archive, named from `wally.toml`, containing only package sources, README, license and manifests. Wally 0.3.2 produces ZIP data.
 
 Enable Mesh / Image APIs in the experience's security settings. Mesh imports also require Roblox's asset permissions. Editable assets have client memory limits and may fail to allocate. See [Roblox's EditableMesh documentation](https://create.roblox.com/docs/reference/engine/classes/EditableMesh).
 
 The foliage comes directly from the supplied `local-package/demo/lib.rbxm`. The selected subset is checked in at `demo/assets/LibrarySamples.rbxm`, with original paths in `provenance.json`; normal builds do not need the template repository. `lune run scripts/extract-library <path-to-lib.rbxm>` refreshes it. Geometry, textures, double-sided leaf cards and SurfaceAppearance are retained; samples are anchored and positioned with a ground-level pivot. Demo assets are excluded from the Wally package.
 
 These third-party meshes currently render as MeshParts but their EditableMesh imports are denied in the connected Studio session. Roblox requires mesh ownership or explicit sharing for editing; enabling the API alone does not grant that access. Until the assets are shared appropriately (or replaced with editable assets), the new rows show synchronized animated originals and an **Asset access denied** status. They do not claim to be QuickPart output.
+
+## CI and releases
+
+GitHub Actions runs **CI / Check and build** for pull requests, pushes to `main`, and manual runs. It lints workflows, installs the pinned Rokit toolchain, runs `scripts/check` and `scripts/build`, then uploads the package, demo place, and Wally ZIP as artifacts retained for 14 days. Studio integration tests and engine performance benchmarks still run in Studio; CI runs the Lune sandbox checks.
+
+Pushing a stable `vX.Y.Z` tag starts **Release**. The workflow verifies that the tag matches `wally.toml` and the checked-out commit, reruns checks/builds, and creates a GitHub release with all three artifacts. Existing release assets can be refreshed by manually running Release for the same tag. Actions are pinned to commits, with weekly Dependabot updates.
+
+To enable Wally publication, add the repository Actions secret `WALLY_AUTH_TOKEN` containing a Wally registry token. The release workflow publishes to Wally after the GitHub release; if the secret is absent, it explicitly skips Wally publication and records that in the run summary. It checks Wally's success message as well as its exit code because Wally 0.3.2 can exit zero on registry errors. No Roblox/Open Cloud credential is needed for these workflows.
+
+For a release, update `wally.toml`, commit and push the changes, then create and push the matching tag. For example, after setting the package version to `0.1.1`:
+
+```sh
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+The workflows become available when `.github/workflows` is pushed to GitHub. To require CI before merging, select **Check and build** in the repository's branch rules after its first run.
 
 ## Part handles
 
