@@ -27,13 +27,17 @@ These third-party meshes currently render as MeshParts but their EditableMesh im
 
 ## Part handles
 
+Require only the package entry point. It exposes the shared `Renderer`, `CONSTANTS`, `Geometry`, `Mesh`, `Import`, `PartSource`, and `Types` modules; consumers do not require child ModuleScripts. Luau types are re-exported directly from the root, for example `type PartHandle = QuickPart.PartHandle` and `type Renderer = QuickPart.Renderer` (`Types` has no runtime values).
+
+Renderer instances, including the default renderer returned by the package, use colon methods: `renderer:Create(...)`, `renderer:Update(...)`, and `renderer:Destroy()`. Constructors remain `QuickPart.new()` / `QuickPart.Renderer.new()`, and stateless helpers use dots, for example `QuickPart.Geometry.primitive(...)`.
+
 ```luau
 --!strict
 --!native
 local QuickPart = require(game.ReplicatedStorage.Packages.QuickPart)
 QuickPart.CONSTANTS.TRIANGLE_BUDGET_PERCENT = 70
 
-local part, reason = QuickPart.Create({
+local part, reason = QuickPart:Create({
     Size = Vector3.new(4, 2, 6),
     CFrame = CFrame.new(0, 10, 0),
     PivotOffset = CFrame.new(0, -1, 0),
@@ -51,9 +55,9 @@ end
 
 part.CFrame = CFrame.new(0, 15, 0)
 part.Size = Vector3.new(6, 2, 6)
-QuickPart.Update(part)
-QuickPart.PivotTo(part, CFrame.new(0, 20, 0))
-QuickPart.Remove(part)
+QuickPart:Update(part)
+QuickPart:PivotTo(part, CFrame.new(0, 20, 0))
+QuickPart:Remove(part)
 ```
 
 A `PartHandle` has `Id: number` (monotonically increasing integer, treat as read-only), `Size`, `CFrame`, `PivotOffset`, `Color`, and `Transparency`. Mutating a table does nothing until `Update` / `UpdateMany`. Like a BasePart, its pivot is `CFrame * PivotOffset`; changing PivotOffset alone does not move geometry. `PivotTo` computes CFrame from that offset. Size must be positive and transparency in `[0, 1]`.
@@ -81,15 +85,15 @@ Creation options also accept `MaterialVariant`, `Shape` (Block, Wedge, CornerWed
 
 ```luau
 local renderer = QuickPart.new()
-local model, reason = renderer.FromModel(workspace.MyModel)
+local model, reason = renderer:FromModel(workspace.MyModel)
 assert(model, reason)
 model.WorldPivot = CFrame.new(0, 20, 0) * CFrame.Angles(0, math.pi / 2, 0)
 model.Scale *= 2
-renderer.UpdateModel(model)
+renderer:UpdateModel(model)
 renderer.RenderingPart.Name = "Scene visuals"
 renderer.RenderingPart.CFrame = CFrame.new(50, 0, 0)
-renderer.RemoveModel(model)
-renderer.Destroy()
+renderer:RemoveModel(model)
+renderer:Destroy()
 ```
 
 `FromModel` includes descendant BaseParts and captures the model's pivot and existing scale. `Scale` is absolute, matching `Model:GetScale()`; doubling it doubles the captured geometry. WorldPivot/Scale edits need `UpdateModel`. Models retain internal part records for cleanup but do not expose independently editable part handles. Their transforms cost O(material batches), with no per-vertex writes. Source models remain untouched; hide or remove them yourself after a successful import if replacing their visuals.

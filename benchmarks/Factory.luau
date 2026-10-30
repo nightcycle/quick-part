@@ -33,7 +33,7 @@ return function(count: number, rigid: boolean, template: Model?)
 	local repeats = if template then 1 else math.clamp(math.floor(1000 / count), 1, 8)
 	local function cleanup()
 		if renderer then
-			renderer.Destroy()
+			renderer:Destroy()
 			renderer = nil
 		end
 		if folder then
@@ -88,22 +88,22 @@ return function(count: number, rigid: boolean, template: Model?)
 			end
 			if rigid then
 				source.WorldPivot = pivots[1]
-				local value, failure = active.FromModel(source)
+				local value, failure = active:FromModel(source)
 				assert(value, failure)
 				modelHandle = value
 			elseif template then
 				for _, part in groups[1] do
-					local value, failure = active.FromPart(part)
+					local value, failure = active:FromPart(part)
 					assert(value, `Library mesh import failed before timing: {tostring(failure)}`)
 					table.insert(handles, value)
 				end
 			else
-				local value, failure = active.CreateMany(options)
+				local value, failure = active:CreateMany(options)
 				assert(value, failure)
 				handles = value
 			end
 			print(
-				`QuickPart benchmark: {count} parts, rigid={rigid}, batches={active.GetStats().Meshes}, batch API={active.GetStats().BatchMeshes > 0}`
+				`QuickPart benchmark: {count} parts, rigid={rigid}, batches={active:GetStats().Meshes}, batch API={active:GetStats().BatchMeshes > 0}`
 			)
 		end)
 		if not ok then
@@ -143,13 +143,13 @@ return function(count: number, rigid: boolean, template: Model?)
 			local model = modelHandle
 			if model then
 				model.WorldPivot = pivots[phase]
-				active.UpdateModel(model)
+				active:UpdateModel(model)
 			else
 				local frames = targets[phase]
 				for index, handle in handles do
 					handle.CFrame = frames[index]
 				end
-				active.UpdateMany(handles)
+				active:UpdateMany(handles)
 			end
 		end
 	end

@@ -34,6 +34,24 @@ export type Face = {
 	Alphas: { number }?,
 }
 export type Geometry = { Vertices: { Vector3 }, Faces: { Face }, TriangleCount: number }
+export type GeometryInfo = {
+	EditableMesh: EditableMesh,
+	RenderingPart: MeshPart?,
+	VertexIds: { number },
+	TriangleIds: { number },
+	FaceIds: { number },
+	ColorId: number,
+	ColorIds: { number },
+	NormalIds: { number },
+}
+export type Stats = {
+	Parts: number,
+	Models: number,
+	Meshes: number,
+	Triangles: number,
+	TriangleLimit: number,
+	BatchMeshes: number,
+}
 export type Style = {
 	Material: Enum.Material,
 	MaterialVariant: string,

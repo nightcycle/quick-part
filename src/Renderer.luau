@@ -10,6 +10,26 @@ type ModelHandle = Types.ModelHandle
 type Record = Types.Record
 type Bucket = Types.Bucket
 type ModelRecord = { Handle: ModelHandle, Parts: { PartHandle }, Buckets: { Bucket }, InitialScale: number }
+export type Renderer = {
+	RenderingPart: Part,
+	CONSTANTS: typeof(CONSTANTS),
+	Geometry: typeof(Geometry),
+	Create: (self: Renderer, options: Types.PartOptions) -> (PartHandle?, string?),
+	CreateMany: (self: Renderer, options: { Types.PartOptions }) -> ({ PartHandle }?, string?),
+	FromPart: (self: Renderer, part: BasePart) -> (PartHandle?, string?),
+	Update: (self: Renderer, handle: PartHandle) -> (),
+	UpdateMany: (self: Renderer, handles: { PartHandle }) -> (),
+	PivotTo: (self: Renderer, handle: PartHandle, pivot: CFrame) -> (),
+	GetPivot: (self: Renderer, handle: PartHandle) -> CFrame,
+	Remove: (self: Renderer, handle: PartHandle) -> (),
+	RemoveMany: (self: Renderer, handles: { PartHandle }) -> (),
+	GetGeometry: (self: Renderer, handle: PartHandle) -> Types.GeometryInfo,
+	FromModel: (self: Renderer, model: Model) -> (ModelHandle?, string?),
+	UpdateModel: (self: Renderer, handle: ModelHandle) -> (),
+	RemoveModel: (self: Renderer, handle: ModelHandle) -> (),
+	GetStats: (self: Renderer) -> Types.Stats,
+	Destroy: (self: Renderer) -> (),
+}
 
 local function finite(value: number): boolean
 	return value == value and math.abs(value) < math.huge
@@ -35,7 +55,7 @@ local function sameStyle(a: Types.Style, b: Types.Style): boolean
 		and a.DoubleSided == b.DoubleSided
 end
 
-local function new()
+local function new(): Renderer
 	local root = Instance.new("Part")
 	root.Name = "QuickPart"
 	root.Size = Vector3.one
@@ -188,22 +208,22 @@ local function new()
 		return created, nil
 	end
 
-	local api = { RenderingPart = root, CONSTANTS = CONSTANTS, Geometry = Geometry }
-	function api.CreateMany(options: { Types.PartOptions }): ({ PartHandle }?, string?)
+	local api = { RenderingPart = root, CONSTANTS = CONSTANTS, Geometry = Geometry } :: Renderer
+	function api:CreateMany(options: { Types.PartOptions }): ({ PartHandle }?, string?)
 		return createMany(options, 0, CFrame.identity)
 	end
-	function api.Create(options: Types.PartOptions): (PartHandle?, string?)
-		local result, reason = api.CreateMany({ options })
+	function api:Create(options: Types.PartOptions): (PartHandle?, string?)
+		local result, reason = api:CreateMany({ options })
 		return if result then result[1] else nil, reason
 	end
-	function api.FromPart(part: BasePart): (PartHandle?, string?)
+	function api:FromPart(part: BasePart): (PartHandle?, string?)
 		local options, reason = PartSource.options(part)
 		if not options then
 			return nil, reason
 		end
-		return api.Create(options)
+		return api:Create(options)
 	end
-	function api.UpdateMany(handles: { PartHandle })
+	function api:UpdateMany(handles: { PartHandle })
 		ready()
 		-- Validate the complete batch before writing anything; duplicate handles are harmless.
 		for _, handle in handles do
@@ -221,25 +241,25 @@ local function new()
 			Mesh.flush(bucket)
 		end
 	end
-	function api.Update(handle: PartHandle)
+	function api:Update(handle: PartHandle)
 		ready()
 		local record = get(handle)
 		validate(handle)
 		Mesh.queue(record)
 		Mesh.flush(record.Bucket)
 	end
-	function api.PivotTo(handle: PartHandle, pivot: CFrame)
+	function api:PivotTo(handle: PartHandle, pivot: CFrame)
 		ready()
 		get(handle)
 		handle.CFrame = pivot * handle.PivotOffset:Inverse()
-		api.Update(handle)
+		api:Update(handle)
 	end
-	function api.GetPivot(handle: PartHandle): CFrame
+	function api:GetPivot(handle: PartHandle): CFrame
 		ready()
 		get(handle)
 		return handle.CFrame * handle.PivotOffset
 	end
-	function api.RemoveMany(handles: { PartHandle })
+	function api:RemoveMany(handles: { PartHandle })
 		ready()
 		for _, handle in handles do
 			get(handle)
@@ -260,10 +280,10 @@ local function new()
 		end
 		clean()
 	end
-	function api.Remove(handle: PartHandle)
-		api.RemoveMany({ handle })
+	function api:Remove(handle: PartHandle)
+		api:RemoveMany({ handle })
 	end
-	function api.GetGeometry(handle: PartHandle)
+	function api:GetGeometry(handle: PartHandle)
 		ready()
 		local record = get(handle)
 		return {
@@ -277,7 +297,7 @@ local function new()
 			NormalIds = table.clone(record.NormalIds),
 		}
 	end
-	function api.FromModel(model: Model): (ModelHandle?, string?)
+	function api:FromModel(model: Model): (ModelHandle?, string?)
 		ready()
 		local pivot, initialScale = model:GetPivot(), model:GetScale()
 		local options: { Types.PartOptions } = {}
@@ -309,7 +329,7 @@ local function new()
 		models[handle.Id] = { Handle = handle, Parts = parts, Buckets = modelBuckets, InitialScale = initialScale }
 		return handle, nil
 	end
-	function api.UpdateModel(handle: ModelHandle)
+	function api:UpdateModel(handle: ModelHandle)
 		ready()
 		local record = models[handle.Id]
 		assert(record and record.Handle == handle, "Unknown, removed, or foreign model handle")
@@ -320,14 +340,14 @@ local function new()
 			Mesh.sync(bucket, root)
 		end
 	end
-	function api.RemoveModel(handle: ModelHandle)
+	function api:RemoveModel(handle: ModelHandle)
 		ready()
 		local record = models[handle.Id]
 		assert(record and record.Handle == handle, "Unknown, removed, or foreign model handle")
-		api.RemoveMany(record.Parts)
+		api:RemoveMany(record.Parts)
 		models[handle.Id] = nil
 	end
-	function api.GetStats()
+	function api:GetStats()
 		local modelCount, batchCount = 0, 0
 		for _ in models do
 			modelCount += 1
@@ -346,7 +366,7 @@ local function new()
 			BatchMeshes = batchCount,
 		}
 	end
-	function api.Destroy()
+	function api:Destroy()
 		if destroyed then
 			return
 		end

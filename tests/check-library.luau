@@ -49,13 +49,13 @@ trunk.Parent = source
 local leaves = sandbox.New("MeshPart")
 leaves.MeshContent, leaves.MeshSize = "denied-leaf-mesh", r.Vector3.one
 leaves.Parent = source
-local handle, reason = package.FromModel(source)
+local handle, reason = package:FromModel(source)
 assert(not handle and reason)
-assert(package.GetStats().Parts == 0 and package.GetStats().Triangles == 0 and package.GetStats().Meshes == 0)
+assert(package:GetStats().Parts == 0 and package:GetStats().Triangles == 0 and package:GetStats().Meshes == 0)
 assert(not trunk.Destroyed and not leaves.Destroyed)
-local recovery = assert(package.Create({ Size = r.Vector3.one }))
-package.Remove(recovery)
-package.Destroy()
+local recovery = assert(package:Create({ Size = r.Vector3.one }))
+package:Remove(recovery)
+package:Destroy()
 print(
 	`Library checks passed: {parts} original meshes, {appearances} SurfaceAppearances, grounded pivots and failed-import recovery.`
 )

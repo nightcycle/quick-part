@@ -43,8 +43,8 @@ return function(): { Result }
 					table.insert(snapshots, { Part = object, Size = object.Size, CFrame = object.CFrame })
 				end
 			end
-			local handle, failure = renderer.FromModel(source)
-			local stats = renderer.GetStats()
+			local handle, failure = renderer:FromModel(source)
+			local stats = renderer:GetStats()
 			if not handle then
 				assert(stats.Parts == 0 and stats.Meshes == 0 and stats.Triangles == 0, "Failed import leaked geometry")
 				if string.find(string.lower(tostring(failure)), "permission", 1, true) then
@@ -63,7 +63,7 @@ return function(): { Result }
 			for _, scale in { 0.6, 1.4, 1 } do
 				handle.WorldPivot = pivot * CFrame.new(4, 3, -7) * CFrame.Angles(0.1, 0.8, -0.1)
 				handle.Scale = initialScale * scale
-				renderer.UpdateModel(handle)
+				renderer:UpdateModel(handle)
 				for _, host in hosts do
 					local expected = handle.WorldPivot * (host.Local.Rotation + host.Local.Position * scale)
 					assert((host.Part.Position - expected.Position).Magnitude < 0.001)
@@ -77,8 +77,8 @@ return function(): { Result }
 					"Import mutated source"
 				)
 			end
-			renderer.RemoveModel(handle)
-			assert(renderer.GetStats().Meshes == 0 and renderer.GetStats().Triangles == 0)
+			renderer:RemoveModel(handle)
+			assert(renderer:GetStats().Meshes == 0 and renderer:GetStats().Triangles == 0)
 			table.insert(results, {
 				Example = name,
 				Status = "Passed",
@@ -86,7 +86,7 @@ return function(): { Result }
 			})
 			return true
 		end)
-		renderer.Destroy()
+		renderer:Destroy()
 		source:Destroy()
 		assert(ok, `{name}: {tostring(reason)}`)
 	end

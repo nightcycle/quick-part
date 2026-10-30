@@ -4,9 +4,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Layout = require(ReplicatedStorage.DemoLayout)
-local Types = require(ReplicatedStorage.Packages.QuickPart.Types)
-type Package = typeof(require(ReplicatedStorage.Packages.QuickPart))
-type Renderer = typeof(require(ReplicatedStorage.Packages.QuickPart).new())
+local QuickPart = require(ReplicatedStorage.Packages.QuickPart)
+type Renderer = QuickPart.Renderer
 type Row = {
 	Example: Layout.Example,
 	Reference: Model,
@@ -17,8 +16,8 @@ type Row = {
 	Status: TextLabel,
 	Message: string,
 	Renderer: Renderer?,
-	Handles: { Types.PartHandle }?,
-	ModelHandle: Types.ModelHandle?,
+	Handles: { QuickPart.PartHandle }?,
+	ModelHandle: QuickPart.ModelHandle?,
 }
 
 local gui = Instance.new("ScreenGui")
@@ -68,7 +67,7 @@ local function setPreviewVisible(row: Row, visible: boolean)
 end
 local function fail(row: Row, reason: string)
 	if row.Renderer then
-		row.Renderer.Destroy()
+		row.Renderer:Destroy()
 	end
 	row.Renderer, row.Handles, row.ModelHandle = nil, nil, nil
 	setPreviewVisible(row, true)
@@ -138,7 +137,7 @@ local function update(row: Row, animationTime: number): boolean
 		row.Reference:PivotTo(left * rotation)
 		if renderer and model then
 			model.WorldPivot, model.Scale = right * rotation, scale
-			renderer.UpdateModel(model)
+			renderer:UpdateModel(model)
 		else
 			row.Preview:ScaleTo(scale)
 			row.Preview:PivotTo(right * rotation)
@@ -159,7 +158,7 @@ local function update(row: Row, animationTime: number): boolean
 		end
 	end
 	if renderer and handles then
-		renderer.UpdateMany(handles)
+		renderer:UpdateMany(handles)
 	end
 	return true
 end
@@ -183,36 +182,22 @@ table.insert(
 )
 
 task.spawn(function()
-	local package: Package? = nil
-	local loaded, loadError = pcall(function()
-		package = require(ReplicatedStorage.Packages.QuickPart)
-	end)
-	local quickPart = package
-	if not alive then
-		return
-	end
-	if not loaded or not quickPart then
-		for _, row in rows do
-			fail(row, tostring(loadError))
-		end
-		return
-	end
 	for _, row in rows do
 		if not alive then
 			break
 		end
-		local renderer = quickPart.new()
+		local renderer = QuickPart.new()
 		renderer.RenderingPart.Name = `QuickPartDemo_{row.Example.Name}`
-		local handles: { Types.PartHandle }? = nil
-		local modelHandle: Types.ModelHandle? = nil
+		local handles: { QuickPart.PartHandle }? = nil
+		local modelHandle: QuickPart.ModelHandle? = nil
 		local ok, reason = pcall(function()
 			local source = row.Source
 			if source then
-				local result, failure = renderer.FromModel(source)
+				local result, failure = renderer:FromModel(source)
 				assert(result, failure)
 				modelHandle = result
 			else
-				local options: { Types.PartOptions } = {}
+				local options: { QuickPart.PartOptions } = {}
 				for _, spec in row.Example.Parts do
 					table.insert(options, {
 						Size = spec.Size,
@@ -225,7 +210,7 @@ task.spawn(function()
 						PivotOffset = spec.PivotOffset,
 					})
 				end
-				local result, failure = renderer.CreateMany(options)
+				local result, failure = renderer:CreateMany(options)
 				assert(result, failure)
 				handles = result
 			end
@@ -235,7 +220,7 @@ task.spawn(function()
 			row.Source = nil
 		end
 		if not alive then
-			renderer.Destroy()
+			renderer:Destroy()
 			break
 		end
 		if ok then
@@ -244,13 +229,13 @@ task.spawn(function()
 			local synced, syncError = pcall(update, row, time)
 			if synced then
 				setPreviewVisible(row, false)
-				local stats = renderer.GetStats()
+				local stats = renderer:GetStats()
 				status(row, `Live · {stats.Parts} parts → {stats.Meshes} meshes`)
 			else
 				fail(row, tostring(syncError))
 			end
 		else
-			renderer.Destroy()
+			renderer:Destroy()
 			fail(row, tostring(reason))
 		end
 	end
@@ -263,7 +248,7 @@ script.Destroying:Connect(function()
 	end
 	for _, row in rows do
 		if row.Renderer then
-			row.Renderer.Destroy()
+			row.Renderer:Destroy()
 		end
 		if row.Source then
 			row.Source:Destroy()

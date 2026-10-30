@@ -24,7 +24,7 @@ for _, example in Layout.Examples do
 				PivotOffset = spec.PivotOffset,
 			})
 		end
-		local handles, reason = renderer.CreateMany(options)
+		local handles, reason = renderer:CreateMany(options)
 		assert(handles, reason)
 		for _, time in { 0, 0.4, 1.2, 4 } do
 			for index, spec in example.Parts do
@@ -33,10 +33,10 @@ for _, example in Layout.Examples do
 				handle.Size, handle.CFrame, handle.Color, handle.Transparency =
 					size, Layout.origin(example, true) * cf, color, transparency
 			end
-			renderer.UpdateMany(handles)
+			renderer:UpdateMany(handles)
 			for index, spec in example.Parts do
 				local size, cf, color, transparency = Layout.sample(example, spec, index, time)
-				local geometry = renderer.GetGeometry(handles[index])
+				local geometry = renderer:GetGeometry(handles[index])
 				local primitive = QuickPart.Geometry.primitive(spec.Shape, QuickPart.CONSTANTS.CURVE_SEGMENTS)
 				for vertexIndex, id in geometry.VertexIds do
 					local actual = geometry.EditableMesh:GetPosition(id)
@@ -60,7 +60,7 @@ for _, example in Layout.Examples do
 				spec.Size, source.WorldPivot * spec.CFrame, spec.Color, spec.Material
 			part.Parent = source
 		end
-		local handle, reason = renderer.FromModel(source)
+		local handle, reason = renderer:FromModel(source)
 		assert(handle, reason)
 		local expectedCount = 0
 		local block = QuickPart.Geometry.primitive("Block", 24)
@@ -68,7 +68,7 @@ for _, example in Layout.Examples do
 			local rotation, scale = Layout.sampleModel(time)
 			handle.WorldPivot, handle.Scale = Layout.origin(example, true) * rotation, scale
 			local writes = sandbox.State.Writes
-			renderer.UpdateModel(handle)
+			renderer:UpdateModel(handle)
 			assert(sandbox.State.Writes == writes, "Rigid model should move hosts without rewriting vertices")
 			local expected = {}
 			for _, spec in example.Parts do
@@ -97,7 +97,7 @@ for _, example in Layout.Examples do
 		assert(expectedCount == 26 * 8)
 		source:Destroy()
 	end
-	renderer.Destroy()
+	renderer:Destroy()
 end
-QuickPart.Destroy()
+QuickPart:Destroy()
 print(`Demo comparison checks passed: {compared} vertex comparisons across all three animations.`)
