@@ -1,0 +1,6 @@
+.tools/
+build/
+Packages/
+DevPackages/
+sourcemap.json
+*.rbxl.lock
